@@ -6,6 +6,7 @@ namespace ABTest.API.Data
     public class TestDbContext : DbContext
     {
         public DbSet<Client> Clients { get; set; }
+        public DbSet<Experiment> Experiments { get; set; }
 
         public TestDbContext(DbContextOptions options) : base(options) { }
 

@@ -20,39 +20,41 @@ namespace ABTest.API.Controllers
         [HttpGet("{token}")]
         [ProducesResponseType(typeof(Client), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetByToken(string token)
+        public async Task<ActionResult<Experiment>> GetByToken(string token)
         {
-            var client = await _context.Clients.FindAsync(token);
+            var ex = await _context.Experiments.FindAsync(token);
 
-            if(client == null)
+            if (ex == null)
             {
-                return NotFound("The client by this token does not exist");
+                return NotFound("The experiment by this token does not exist");
             }
 
-            return Ok(client);
+            return ex;
         }
 
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         public async Task<IActionResult> Create([FromBody] Client client)
         {
-
-            if(await _context.Clients.AnyAsync(c => c.Token == client.Token))
-            {
-                return BadRequest("The recieved data isn't valid, the client has already created");
-            }
-            else if(client == null)
+            if (client == null)
             {
                 return BadRequest(StatusCodes.Status400BadRequest);
             }
+            //var check = await _context.Clients.AnyAsync(c => c.Token == client.Token);
+            else if (await _context.Clients.AnyAsync(c => c.ClientId == client.ClientId))
+            {
+                return BadRequest("The recieved data isn't valid, the client has already created");
+            }
 
-            client.Experiment.Name = client.Token.ToString() + $"Exp{client.Experiment.Id}";
+            client.Experiment.Name = client.Experiment.Token.ToString() + "Exp";
 
-            await _context.Clients.AddAsync(client);
+            await _context.Experiments.AddAsync(client.Experiment);
+
+            await _context.Clients.AddAsync(client);           
 
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetByToken), client);
+            return CreatedAtAction(nameof(Create),new { name = client.Experiment.Name }, client);
         }
     }
 }
